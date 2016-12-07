@@ -28,9 +28,22 @@
        (map encode)
        (string/join "/")))
 
-(defn request
+(defprotocol ESearchClient
+  (-request [client request-params]))
+
+(defn request-async
   [client request-params]
   (http/request client
                 (merge {:headers {"Content-Type" "application/json; charset=UTF-8"}
                         :as :json}
                        request-params)))
+
+(extend-protocol ESearchClient
+  org.eclipse.jetty.client.HttpClient
+  (-request [this request-params]
+    (request-async this request-params)))
+
+;;; shape and type of result dependent on client impl.
+(defn request
+  [client request-params]
+  (-request client request-params))
